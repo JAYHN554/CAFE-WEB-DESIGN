@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ember & Ground — Specialty Coffee</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --espresso: #1A0F0A;
+      --ivory: #F7F0E6;
+      --sage: #8BA888;
+      --sienna: #C0622B;
+      --gold: #D4A853;
+      --cream: #EDE4D5;
+      --mid: #6B4F3A;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--espresso);
+      color: var(--ivory);
+      font-family: 'Inter', sans-serif;
+      font-weight: 300;
+      overflow-x: hidden;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.4rem 3rem;
+      transition: background 0.4s, backdrop-filter 0.4s;
+    }
+    nav.scrolled {
+      background: rgba(26,15,10,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(212,168,83,0.15);
+    }
+    .nav-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.3rem;
+      letter-spacing: 0.06em;
+      color: var(--gold);
+      text-decoration: none;
+    }
+    .nav-links {
+      display: flex;
+      gap: 2.4rem;
+      list-style: none;
+    }
+    .nav-links a {
+      color: var(--ivory);
+      text-decoration: none;
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      opacity: 0.75;
+      transition: opacity 0.2s, color 0.2s;
+    }
+    .nav-links a:hover { opacity: 1; color: var(--gold); }
+
+    /* ── HERO ── */
+    #hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    /* Grain texture overlay */
+    #hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      opacity: 0.45;
+      pointer-events: none;
+    }
+
+    /* Radial glow */
+    .hero-glow {
+      position: absolute;
+      width: 600px; height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(192,98,43,0.18) 0%, transparent 70%);
+      top: 50%; left: 50%;
+      transform: translate(-50%, -60%);
+      pointer-events: none;
+    }
+
+    /* Animated steam cup */
+    .cup-wrap {
+      position: relative;
+      width: 120px;
+      margin-bottom: 2.5rem;
+    }
+    .cup-svg { width: 100%; display: block; }
+
+    .steam-path {
+      stroke: var(--gold);
+      stroke-width: 2.5;
+      fill: none;
+      stroke-linecap: round;
+      opacity: 0;
+    }
+    .steam-path:nth-child(1) { animation: steam 2.4s ease-in-out 0s infinite; }
+    .steam-path:nth-child(2) { animation: steam 2.4s ease-in-out 0.5s infinite; }
+    .steam-path:nth-child(3) { animation: steam 2.4s ease-in-out 1s infinite; }
+
+    @keyframes steam {
+      0%   { opacity: 0; transform: translateY(0) scaleX(1); }
+      20%  { opacity: 0.7; }
+      70%  { opacity: 0.3; transform: translateY(-22px) scaleX(1.3); }
+      100% { opacity: 0; transform: translateY(-32px) scaleX(0.8); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .steam-path { animation: none; opacity: 0; }
+    }
+
+    .hero-eyebrow {
+      font-size: 0.72rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 1rem;
+      opacity: 0;
+      animation: fadeUp 0.9s ease 0.3s forwards;
+    }
+    .hero-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(3.2rem, 8vw, 7rem);
+      font-weight: 900;
+      line-height: 0.92;
+      letter-spacing: -0.02em;
+      color: var(--ivory);
+      opacity: 0;
+      animation: fadeUp 0.9s ease 0.55s forwards;
+    }
+    .hero-title em {
+      font-style: italic;
+      color: var(--sienna);
+    }
+    .hero-sub {
+      margin-top: 1.6rem;
+      font-size: 1rem;
+      color: var(--cream);
+      opacity: 0;
+      animation: fadeUp 0.9s ease 0.8s forwards;
+      max-width: 36ch;
+      line-height: 1.7;
+    }
+    .hero-actions {
+      margin-top: 2.4rem;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      opacity: 0;
+      animation: fadeUp 0.9s ease 1s forwards;
+    }
+    .btn-primary {
+      background: var(--sienna);
+      color: var(--ivory);
+      border: none;
+      padding: 0.85rem 2.2rem;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .btn-primary:hover { background: #a8531f; transform: translateY(-2px); }
+    .btn-ghost {
+      background: transparent;
+      color: var(--ivory);
+      border: 1px solid rgba(247,240,230,0.35);
+      padding: 0.85rem 2.2rem;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      text-decoration: none;
+      transition: border-color 0.2s, color 0.2s, transform 0.15s;
+    }
+    .btn-ghost:hover { border-color: var(--gold); color: var(--gold); transform: translateY(-2px); }
+
+    .scroll-hint {
+      position: absolute;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+      opacity: 0.4;
+      animation: fadeUp 1s ease 1.5s forwards;
+    }
+    .scroll-hint span {
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+    .scroll-line {
+      width: 1px;
+      height: 40px;
+      background: linear-gradient(to bottom, var(--gold), transparent);
+      animation: scrollPulse 1.8s ease-in-out infinite;
+    }
+    @keyframes scrollPulse {
+      0%, 100% { opacity: 0.4; transform: scaleY(1); }
+      50% { opacity: 1; transform: scaleY(1.15); }
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── TICKER ── */
+    .ticker-bar {
+      background: var(--sienna);
+      padding: 0.75rem 0;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    .ticker-inner {
+      display: inline-flex;
+      animation: ticker 22s linear infinite;
+    }
+    .ticker-inner span {
+      font-size: 0.72rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ivory);
+      padding: 0 2.5rem;
+    }
+    .ticker-inner span::before {
+      content: '✦';
+      margin-right: 2.5rem;
+      color: var(--gold);
+    }
+    @keyframes ticker {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+
+    /* ── MENU SECTION ── */
+    #menu {
+      background: var(--ivory);
+      color: var(--espresso);
+      padding: 7rem 3rem;
+    }
+    .section-label {
+      font-size: 0.7rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--sienna);
+      margin-bottom: 0.6rem;
+    }
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.2rem, 5vw, 3.8rem);
+      font-weight: 700;
+      line-height: 1.1;
+      color: var(--espresso);
+      margin-bottom: 3.5rem;
+    }
+    .menu-tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 3rem;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      background: none;
+      border: 1px solid rgba(26,15,10,0.2);
+      padding: 0.55rem 1.4rem;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.78rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      color: var(--mid);
+      transition: all 0.2s;
+    }
+    .tab-btn.active,
+    .tab-btn:hover {
+      background: var(--espresso);
+      color: var(--ivory);
+      border-color: var(--espresso);
+    }
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5px;
+      background: rgba(26,15,10,0.1);
+    }
+    .menu-card {
+      background: var(--ivory);
+      padding: 2rem;
+      transition: background 0.2s;
+      display: none;
+    }
+    .menu-card.visible { display: block; }
+    .menu-card:hover { background: var(--cream); }
+    .card-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+    }
+    .card-desc {
+      font-size: 0.82rem;
+      line-height: 1.65;
+      color: var(--mid);
+      margin-bottom: 1.2rem;
+    }
+    .card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .card-price {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem;
+      color: var(--sienna);
+    }
+    .card-tag {
+      font-size: 0.65rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      background: rgba(139,168,136,0.2);
+      color: #4a7047;
+      padding: 0.25rem 0.7rem;
+      border-radius: 20px;
+    }
+
+    /* ── STORY SECTION ── */
+    #story {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: 80vh;
+    }
+    .story-visual {
+      background: var(--mid);
+      position: relative;
+      overflow: hidden;
+      min-height: 500px;
+    }
+    .story-art {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    /* Coffee bag illustration using CSS */
+    .coffee-illustration {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #2d1810 0%, #4a2a1a 40%, #6b3f28 100%);
+    }
+    .story-text {
+      background: var(--espresso);
+      padding: 6rem 4rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .story-text .section-label { color: var(--sage); }
+    .story-text .section-title { color: var(--ivory); }
+    .story-body {
+      font-size: 0.95rem;
+      line-height: 1.85;
+      color: rgba(247,240,230,0.72);
+      max-width: 42ch;
+    }
+    .story-body + .story-body { margin-top: 1rem; }
+    .story-stat-row {
+      display: flex;
+      gap: 2.5rem;
+      margin-top: 3rem;
+      flex-wrap: wrap;
+    }
+    .stat-item {}
+    .stat-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.8rem;
+      font-weight: 900;
+      color: var(--gold);
+      line-height: 1;
+    }
+    .stat-label {
+      font-size: 0.7rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: rgba(247,240,230,0.45);
+      margin-top: 0.3rem;
+    }
+
+    /* ── ORIGINS MAP ── */
+    #origins {
+      background: var(--cream);
+      color: var(--espresso);
+      padding: 7rem 3rem;
+      text-align: center;
+    }
+    .origins-intro {
+      max-width: 50ch;
+      margin: 0 auto 4rem;
+      font-size: 0.92rem;
+      line-height: 1.8;
+      color: var(--mid);
+    }
+    .origins-cards {
+      display: flex;
+      gap: 1px;
+      background: rgba(26,15,10,0.1);
+      max-width: 900px;
+      margin: 0 auto;
+      flex-wrap: wrap;
+    }
+    .origin-card {
+      flex: 1;
+      min-width: 200px;
+      background: var(--cream);
+      padding: 2.5rem 2rem;
+      text-align: left;
+      position: relative;
+      overflow: hidden;
+      transition: background 0.25s;
+      cursor: default;
+    }
+    .origin-card:hover { background: var(--ivory); }
+    .origin-flag {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      display: block;
+    }
+    .origin-country {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+    }
+    .origin-region {
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--sienna);
+      margin-bottom: 0.8rem;
+    }
+    .origin-note {
+      font-size: 0.8rem;
+      line-height: 1.6;
+      color: var(--mid);
+    }
+    .origin-card::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--sage);
+      transform: scaleX(0);
+      transition: transform 0.3s;
+      transform-origin: left;
+    }
+    .origin-card:hover::after { transform: scaleX(1); }
+
+    /* ── RESERVATION ── */
+    #reserve {
+      background: var(--espresso);
+      padding: 7rem 3rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    #reserve::before {
+      content: '';
+      position: absolute;
+      width: 500px; height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(212,168,83,0.1) 0%, transparent 70%);
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+    #reserve .section-title { color: var(--ivory); margin-bottom: 0.8rem; }
+    #reserve .section-label { color: var(--gold); }
+    .reserve-sub {
+      font-size: 0.92rem;
+      color: rgba(247,240,230,0.6);
+      max-width: 40ch;
+      margin: 0 auto 3rem;
+      line-height: 1.7;
+    }
+    .reserve-form {
+      display: flex;
+      gap: 1rem;
+      max-width: 520px;
+      margin: 0 auto;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .reserve-form input {
+      flex: 1;
+      min-width: 200px;
+      background: rgba(247,240,230,0.07);
+      border: 1px solid rgba(247,240,230,0.2);
+      padding: 0.9rem 1.2rem;
+      color: var(--ivory);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.85rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .reserve-form input::placeholder { color: rgba(247,240,230,0.35); }
+    .reserve-form input:focus { border-color: var(--gold); }
+    .hours-row {
+      display: flex;
+      justify-content: center;
+      gap: 3rem;
+      margin-top: 4rem;
+      flex-wrap: wrap;
+    }
+    .hours-day {
+      text-align: center;
+    }
+    .hours-day-name {
+      font-size: 0.7rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 0.4rem;
+    }
+    .hours-time {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.05rem;
+      color: rgba(247,240,230,0.8);
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      background: #0f0704;
+      padding: 3rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: gap;
+      border-top: 1px solid rgba(212,168,83,0.15);
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+    .footer-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4rem;
+      color: var(--gold);
+    }
+    .footer-copy {
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      color: rgba(247,240,230,0.3);
+    }
+    .footer-address {
+      font-size: 0.78rem;
+      color: rgba(247,240,230,0.4);
+      line-height: 1.6;
+      text-align: right;
+    }
+
+    /* ── SCROLL REVEAL ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 0.75s ease, transform 0.75s ease;
+    }
+    .reveal.revealed {
+      opacity: 1;
+      transform: none;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      nav { padding: 1.2rem 1.5rem; }
+      .nav-links { gap: 1.2rem; }
+      .nav-links a { font-size: 0.72rem; }
+      #menu, #origins, #reserve { padding: 5rem 1.5rem; }
+      #story { grid-template-columns: 1fr; }
+      .story-visual { min-height: 320px; }
+      .story-text { padding: 4rem 2rem; }
+      footer { flex-direction: column; text-align: center; }
+      .footer-address { text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav id="nav">
+    <a class="nav-logo" href="#">Ember & Ground</a>
+    <ul class="nav-links">
+      <li><a href="#menu">Menu</a></li>
+      <li><a href="#story">Our Story</a></li>
+      <li><a href="#origins">Origins</a></li>
+      <li><a href="#reserve">Visit</a></li>
+    </ul>
+  </nav>
+
+  <!-- HERO -->
+  <section id="hero">
+    <div class="hero-glow"></div>
+
+    <div class="cup-wrap">
+      <svg class="cup-svg" viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg">
+        <!-- Steam -->
+        <g style="transform-origin: center bottom;">
+          <path class="steam-path" d="M42 30 Q36 22 42 14 Q48 6 42 0" />
+          <path class="steam-path" d="M60 28 Q54 20 60 12 Q66 4 60 -2" />
+          <path class="steam-path" d="M78 30 Q72 22 78 14 Q84 6 78 0" />
+        </g>
+        <!-- Saucer -->
+        <ellipse cx="60" cy="90" rx="46" ry="8" fill="#3d1f10" />
+        <ellipse cx="60" cy="88" rx="40" ry="6" fill="#4a2810" />
+        <!-- Cup body -->
+        <path d="M28 50 Q26 80 60 82 Q94 80 92 50 Z" fill="#2a1408" />
+        <path d="M30 48 Q28 78 60 80 Q92 78 90 48 Z" fill="#3d1f10" />
+        <!-- Coffee surface -->
+        <ellipse cx="60" cy="48" rx="30" ry="9" fill="#1a0a04" />
+        <ellipse cx="60" cy="48" rx="28" ry="7.5" fill="#2d1205" />
+        <!-- Latte art swirl -->
+        <path d="M48 46 Q55 42 62 46 Q69 50 76 46" stroke="#C0622B" stroke-width="1.5" fill="none" opacity="0.7" />
+        <ellipse cx="60" cy="46" rx="6" ry="3" fill="none" stroke="#D4A853" stroke-width="1" opacity="0.5" />
+        <!-- Handle -->
+        <path d="M90 56 Q108 56 108 65 Q108 74 90 74" stroke="#3d1f10" stroke-width="5" fill="none" stroke-linecap="round" />
+        <!-- Rim highlight -->
+        <ellipse cx="60" cy="48" rx="30" ry="4" fill="none" stroke="rgba(212,168,83,0.3)" stroke-width="1" />
+      </svg>
+    </div>
+
+    <p class="hero-eyebrow">Specialty Coffee · Since 2018</p>
+    <h1 class="hero-title">Where every<br />cup is <em>ritual</em></h1>
+    <p class="hero-sub">Single-origin beans, roasted in-house. Brewed with patience. Served in a room worth staying in.</p>
+    <div class="hero-actions">
+      <a href="#menu" class="btn-primary">Explore Menu</a>
+      <a href="#reserve" class="btn-ghost">Find Us</a>
+    </div>
+
+    <div class="scroll-hint">
+      <span>Scroll</span>
+      <div class="scroll-line"></div>
+    </div>
+  </section>
+
+  <!-- TICKER -->
+  <div class="ticker-bar" aria-hidden="true">
+    <div class="ticker-inner">
+      <span>Single Origin</span><span>Hand-poured Brews</span><span>In-house Roastery</span><span>Seasonal Blends</span>
+      <span>Natural Process</span><span>Washed & Honey</span><span>Barista Training</span><span>Beans to Take Home</span>
+      <span>Single Origin</span><span>Hand-poured Brews</span><span>In-house Roastery</span><span>Seasonal Blends</span>
+      <span>Natural Process</span><span>Washed & Honey</span><span>Barista Training</span><span>Beans to Take Home</span>
+    </div>
+  </div>
+
+  <!-- MENU -->
+  <section id="menu">
+    <div class="reveal">
+      <p class="section-label">What We Brew</p>
+      <h2 class="section-title">The Menu</h2>
+    </div>
+    <div class="menu-tabs">
+      <button class="tab-btn active" data-cat="espresso">Espresso</button>
+      <button class="tab-btn" data-cat="pour-over">Pour Over</button>
+      <button class="tab-btn" data-cat="food">Food</button>
+      <button class="tab-btn" data-cat="cold">Cold Brew</button>
+    </div>
+    <div class="menu-grid" id="menu-grid"></div>
+  </section>
+
+  <!-- STORY -->
+  <section id="story">
+    <div class="story-visual">
+      <div class="coffee-illustration">
+        <svg viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg" style="width:200px; opacity:0.85;">
+          <!-- Coffee bag illustration -->
+          <rect x="60" y="80" width="180" height="260" rx="8" fill="#1a0a04" />
+          <rect x="70" y="90" width="160" height="240" rx="6" fill="#2d1408" />
+          <!-- Bag crease lines -->
+          <line x1="150" y1="90" x2="150" y2="330" stroke="rgba(212,168,83,0.15)" stroke-width="1" />
+          <path d="M70 180 Q150 170 230 180" stroke="rgba(212,168,83,0.15)" stroke-width="1" fill="none" />
+          <!-- Label area -->
+          <rect x="85" y="140" width="130" height="120" rx="4" fill="#3d1f10" />
+          <!-- Brand mark on bag -->
+          <circle cx="150" cy="175" r="32" fill="none" stroke="#D4A853" stroke-width="1.5" />
+          <text x="150" y="170" text-anchor="middle" fill="#D4A853" font-family="serif" font-size="11" font-style="italic">Ember</text>
+          <text x="150" y="183" text-anchor="middle" fill="#D4A853" font-family="serif" font-size="8" letter-spacing="3">&amp; GROUND</text>
+          <!-- Bag top fold -->
+          <path d="M60 80 L90 40 L210 40 L240 80 Z" fill="#1a0a04" />
+          <path d="M90 40 L100 55 L200 55 L210 40 Z" fill="#2d1408" />
+          <!-- Valve circle -->
+          <circle cx="150" cy="280" r="12" fill="#1a0a04" stroke="rgba(212,168,83,0.4)" stroke-width="1.5" />
+          <circle cx="150" cy="280" r="6" fill="#3d1f10" />
+        </svg>
+      </div>
+    </div>
+    <div class="story-text">
+      <p class="section-label reveal">Our Story</p>
+      <h2 class="section-title reveal">Small batch.<br />Big care.</h2>
+      <p class="story-body reveal">Ember & Ground began with a single roaster in a borrowed garage, a dog-eared copy of William Ukers, and a belief that great coffee is grown, not manufactured.</p>
+      <p class="story-body reveal">We work directly with farm families across Ethiopia, Colombia, and Sumatra — paying above-market rates, visiting annually, and sharing cupping notes that flow both ways.</p>
+      <div class="story-stat-row reveal">
+        <div class="stat-item">
+          <div class="stat-num">7</div>
+          <div class="stat-label">Origin Countries</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">40k</div>
+          <div class="stat-label">Cups This Year</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">12</div>
+          <div class="stat-label">Farm Partners</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ORIGINS -->
+  <section id="origins">
+    <div class="reveal">
+      <p class="section-label">Where It Begins</p>
+      <h2 class="section-title">Our Origins</h2>
+      <p class="origins-intro">Every bean carries a story of altitude, rainfall, and the hands that picked it. Here are the regions that make our menu sing.</p>
+    </div>
+    <div class="origins-cards reveal">
+      <div class="origin-card">
+        <span class="origin-flag">🇪🇹</span>
+        <div class="origin-country">Ethiopia</div>
+        <div class="origin-region">Yirgacheffe</div>
+        <p class="origin-note">Jasmine and bergamot up front, trailing into stone fruit. The benchmark for washed African coffees.</p>
+      </div>
+      <div class="origin-card">
+        <span class="origin-flag">🇨🇴</span>
+        <div class="origin-country">Colombia</div>
+        <div class="origin-region">Huila</div>
+        <p class="origin-note">Caramel sweetness, red apple acidity, and a long smooth finish that makes it our most popular espresso base.</p>
+      </div>
+      <div class="origin-card">
+        <span class="origin-flag">🇬🇹</span>
+        <div class="origin-country">Guatemala</div>
+        <div class="origin-region">Antigua</div>
+        <p class="origin-note">Volcanic soil, high altitude. Deep cocoa, brown sugar, and a pleasant smokiness that holds up beautifully in milk.</p>
+      </div>
+      <div class="origin-card">
+        <span class="origin-flag">🇮🇩</span>
+        <div class="origin-country">Sumatra</div>
+        <div class="origin-region">Mandheling</div>
+        <p class="origin-note">Earthy, full-bodied, cedar and dark chocolate. The one that converts people who thought they didn't like coffee.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESERVATION / VISIT -->
+  <section id="reserve">
+    <p class="section-label reveal">Come By</p>
+    <h2 class="section-title reveal">We'll save you a seat</h2>
+    <p class="reserve-sub reveal">No reservation needed for coffee — just walk in. For private events and cuppings, drop us your name.</p>
+    <form class="reserve-form reveal" onsubmit="handleReserve(event)">
+      <input type="text" placeholder="Your name" id="res-name" />
+      <input type="email" placeholder="Email address" id="res-email" />
+      <button type="submit" class="btn-primary">Get in Touch</button>
+    </form>
+    <p id="form-msg" style="margin-top:1.2rem; font-size:0.85rem; color:var(--sage); min-height:1.2rem;"></p>
+    <div class="hours-row reveal">
+      <div class="hours-day">
+        <div class="hours-day-name">Mon – Fri</div>
+        <div class="hours-time">7:00 – 19:00</div>
+      </div>
+      <div class="hours-day">
+        <div class="hours-day-name">Saturday</div>
+        <div class="hours-time">8:00 – 20:00</div>
+      </div>
+      <div class="hours-day">
+        <div class="hours-day-name">Sunday</div>
+        <div class="hours-time">9:00 – 17:00</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-logo">Ember &amp; Ground</div>
+    <p class="footer-copy">© 2026 Ember & Ground. All rights reserved.</p>
+    <div class="footer-address">
+      14 Roastery Lane, Third Floor<br />
+      Mumbai, Maharashtra 400001
+    </div>
+  </footer>
+
+  <script>
+    // ── MENU DATA ──
+    const menuData = [
+      { cat: 'espresso', name: 'Cortado', desc: 'Equal parts espresso and steamed milk, served in a Gibraltar glass. Clean, balanced, no nonsense.', price: '₹280', tag: 'Signature' },
+      { cat: 'espresso', name: 'Flat White', desc: 'Ristretto-pulled double shot with velvety micro-foam. Stronger than a latte, smaller than your usual.', price: '₹320', tag: 'Popular' },
+      { cat: 'espresso', name: 'Americano', desc: 'The Colombian Huila pulled long over hot water. Bold body, clean finish, no bitterness.', price: '₹240', tag: null },
+      { cat: 'espresso', name: 'Espresso Tonic', desc: 'A double ristretto over sparkling tonic water with a sliver of orange peel. Polarising in the best way.', price: '₹360', tag: 'Seasonal' },
+      { cat: 'espresso', name: 'Piccolo Latte', desc: 'A ristretto in a small glass, topped with silky textured milk. Dense, sweet, and very Italian.', price: '₹290', tag: null },
+      { cat: 'pour-over', name: 'V60 — Ethiopia', desc: 'Yirgacheffe, washed process. Bright jasmine florals and lemon verbena with a clean, tea-like finish.', price: '₹380', tag: 'Light Roast' },
+      { cat: 'pour-over', name: 'Chemex — Guatemala', desc: 'Antigua beans in the eight-cup Chemex. Full body, dark chocolate, and a long smoky sweetness.', price: '₹420', tag: 'Medium' },
+      { cat: 'pour-over', name: 'AeroPress — Sumatra', desc: 'Full immersion, short press. Cedar, earth, and 70% dark chocolate in a dense, velvety cup.', price: '₹350', tag: 'Dark Roast' },
+      { cat: 'food', name: 'Cardamom Kouign-Amann', desc: 'Laminated pastry with caramelised sugar crust and a whisper of cardamom. Made fresh each morning.', price: '₹220', tag: 'Baked Daily' },
+      { cat: 'food', name: 'Avocado Toast', desc: 'On sourdough from the bakery downstairs. Poached egg, dukkah, chilli flakes, preserved lemon.', price: '₹340', tag: null },
+      { cat: 'food', name: 'Banana Bread', desc: 'Dense, moist, barely sweet. Served slightly warm with cultured butter. The classic companion.', price: '₹180', tag: 'Vegan' },
+      { cat: 'cold', name: 'Cold Brew', desc: 'The Colombian blend steeped 18 hours in cold water. Silky, low-acid, and dangerously drinkable.', price: '₹300', tag: null },
+      { cat: 'cold', name: 'Nitro Cold Brew', desc: 'Cold brew charged with nitrogen for a creamy, Guinness-like pour straight from the tap.', price: '₹360', tag: 'Tap' },
+      { cat: 'cold', name: 'Iced Lavender Latte', desc: 'House lavender syrup, oat milk, double espresso over ice. Floral, smooth, and Instagram-proof.', price: '₹380', tag: 'Seasonal' },
+    ];
+
+    function renderMenu(cat) {
+      const grid = document.getElementById('menu-grid');
+      grid.innerHTML = '';
+      menuData
+        .filter(item => item.cat === cat)
+        .forEach(item => {
+          const card = document.createElement('div');
+          card.className = 'menu-card visible';
+          card.innerHTML = `
+            <div class="card-name">${item.name}</div>
+            <p class="card-desc">${item.desc}</p>
+            <div class="card-footer">
+              <span class="card-price">${item.price}</span>
+              ${item.tag ? `<span class="card-tag">${item.tag}</span>` : ''}
+            </div>`;
+          grid.appendChild(card);
+        });
+    }
+
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderMenu(btn.dataset.cat);
+      });
+    });
+
+    renderMenu('espresso');
+
+    // ── NAV SCROLL ──
+    const nav = document.getElementById('nav');
+    window.addEventListener('scroll', () => {
+      nav.classList.toggle('scrolled', window.scrollY > 60);
+    });
+
+    // ── REVEAL ON SCROLL ──
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('revealed');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12 });
+
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+    // ── FORM ──
+    function handleReserve(e) {
+      e.preventDefault();
+      const name = document.getElementById('res-name').value.trim();
+      const email = document.getElementById('res-email').value.trim();
+      const msg = document.getElementById('form-msg');
+      if (!name || !email) {
+        msg.style.color = 'var(--sienna)';
+        msg.textContent = 'Please fill in both fields.';
+        return;
+      }
+      msg.style.color = 'var(--sage)';
+      msg.textContent = `Thanks, ${name}! We'll be in touch at ${email} soon.`;
+      document.getElementById('res-name').value = '';
+      document.getElementById('res-email').value = '';
+    }
+  </script>
+</body>
+</html>
